@@ -1,0 +1,106 @@
+{
+  "weights": {
+    "landing_height": -12.659446140720274,
+    "eroded_cells": 8.305230957563165,
+    "row_transitions": -4.550191462856644,
+    "col_transitions": -32.39843365850559,
+    "holes": -3.8428223729078512,
+    "wells": -4.521134732662449,
+    "rows_with_holes": -13.116331989338768,
+    "bumpiness": -2.279853271226112
+  },
+  "generation": 15,
+  "max_pieces_per_game": 400,
+  "history": [
+    {
+      "generation": 1,
+      "best": 146.33333333333334,
+      "elite_mean": 23.75,
+      "population_mean": 4.816666666666667
+    },
+    {
+      "generation": 2,
+      "best": 155.33333333333334,
+      "elite_mean": 104.5,
+      "population_mean": 28.9
+    },
+    {
+      "generation": 3,
+      "best": 158.33333333333334,
+      "elite_mean": 155.25,
+      "population_mean": 68.45833333333334
+    },
+    {
+      "generation": 4,
+      "best": 159.0,
+      "elite_mean": 158.125,
+      "population_mean": 131.86666666666667
+    },
+    {
+      "generation": 5,
+      "best": 159.0,
+      "elite_mean": 158.5,
+      "population_mean": 149.65
+    },
+    {
+      "generation": 6,
+      "best": 159.0,
+      "elite_mean": 158.375,
+      "population_mean": 148.425
+    },
+    {
+      "generation": 7,
+      "best": 159.0,
+      "elite_mean": 158.83333333333331,
+      "population_mean": 156.75833333333333
+    },
+    {
+      "generation": 8,
+      "best": 159.0,
+      "elite_mean": 158.625,
+      "population_mean": 148.3
+    },
+    {
+      "generation": 9,
+      "best": 159.0,
+      "elite_mean": 158.58333333333334,
+      "population_mean": 149.425
+    },
+    {
+      "generation": 10,
+      "best": 158.66666666666666,
+      "elite_mean": 158.58333333333331,
+      "population_mean": 157.80833333333334
+    },
+    {
+      "generation": 11,
+      "best": 159.0,
+      "elite_mean": 158.66666666666666,
+      "population_mean": 158.08333333333331
+    },
+    {
+      "generation": 12,
+      "best": 158.66666666666666,
+      "elite_mean": 158.54166666666666,
+      "population_mean": 157.94166666666666
+    },
+    {
+      "generation": 13,
+      "best": 159.0,
+      "elite_mean": 158.83333333333331,
+      "population_mean": 158.075
+    },
+    {
+      "generation": 14,
+      "best": 159.0,
+      "elite_mean": 158.625,
+      "population_mean": 156.2
+    },
+    {
+      "generation": 15,
+      "best": 159.0,
+      "elite_mean": 158.91666666666666,
+      "population_mean": 158.01666666666668
+    }
+  ]
+}

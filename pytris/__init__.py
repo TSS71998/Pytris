@@ -1,0 +1,1 @@
+"""Pytris: Tetris engine, AI agent and pygame front-end."""
