@@ -18,19 +18,18 @@ _SHAPES = {
 
 
 def _build_rotations(rows):
-    """Return the 4 clockwise rotations as tuples of (row, col) offsets."""
     n = len(rows)
     cells = [(r, c) for r in range(n) for c in range(n) if rows[r][c] == "X"]
     rots = []
     for _ in range(4):
         rots.append(tuple(sorted(cells)))
-        cells = [(c, n - 1 - r) for r, c in cells]  # rotate clockwise
+        cells = [(c, n - 1 - r) for r, c in cells]
     return rots
 
 
 ROTATIONS = {name: _build_rotations(rows) for name, rows in _SHAPES.items()}
 BOX_SIZE = {name: len(rows) for name, rows in _SHAPES.items()}
-PIECE_ID = {name: i + 1 for i, name in enumerate(PIECE_NAMES)}  # 0 = empty cell
+PIECE_ID = {name: i + 1 for i, name in enumerate(PIECE_NAMES)}
 
 LINE_SCORES = {0: 0, 1: 100, 2: 300, 3: 500, 4: 800}
 # (dx, dy) offsets tried when a rotation is blocked: a simple wall/floor kick.
@@ -51,7 +50,6 @@ class Piece:
 
 
 def spawn_position(name, rot=0):
-    """Top-left (x, y) where a piece appears: centered, top cell on row 0."""
     cells = ROTATIONS[name][rot]
     return (WIDTH - BOX_SIZE[name]) // 2, -min(r for r, _ in cells)
 
@@ -74,9 +72,7 @@ class Tetris:
         self.current = None
         self._spawn()
 
-    # ---------------------------------------------------------------- pieces
     def _next_from_bag(self):
-        """7-bag randomizer: every piece once per shuffled bag of seven."""
         if not self.bag:
             self.bag = list(PIECE_NAMES)
             self.rng.shuffle(self.bag)
@@ -101,7 +97,6 @@ class Tetris:
                 return False
         return True
 
-    # --------------------------------------------------------------- actions
     def move(self, dx):
         p = self.current
         if not self.game_over and self.fits(p.name, p.rot, p.x + dx, p.y):
@@ -110,7 +105,6 @@ class Tetris:
         return False
 
     def rotate(self, direction=1):
-        """direction=1 clockwise, -1 counter-clockwise."""
         if self.game_over:
             return False
         p = self.current
@@ -126,7 +120,6 @@ class Tetris:
         return not self.fits(p.name, p.rot, p.x, p.y + 1)
 
     def gravity_step(self):
-        """Move the piece down one row. Returns False if it is resting."""
         if self.game_over or self.on_ground():
             return False
         self.current.y += 1
@@ -168,8 +161,6 @@ class Tetris:
         return True
 
     def lock(self):
-        """Freeze the current piece, clear lines, spawn the next one.
-        Returns the number of lines cleared."""
         p = self.current
         pid = PIECE_ID[p.name]
         for rr, cc in p.cells():
@@ -193,8 +184,6 @@ class Tetris:
         return n
 
     def place(self, rot, x):
-        """Teleport-and-drop used by headless AI evaluation: put the current
-        piece in rotation `rot` at column `x`, then hard drop."""
         p = self.current
         _, y = spawn_position(p.name, rot)
         if not self.fits(p.name, rot, x, y):
@@ -204,6 +193,5 @@ class Tetris:
         return self.hard_drop()
 
     def gravity_interval(self):
-        """Seconds per row at the current level (Tetris guideline curve)."""
         lvl = min(self.level, 20)
         return (0.8 - (lvl - 1) * 0.007) ** (lvl - 1)

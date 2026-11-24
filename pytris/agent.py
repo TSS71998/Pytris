@@ -1,28 +1,3 @@
-"""The Tetris AI.
-
-How it plays
-------------
-For every possible placement of the current piece (each rotation x each
-column) it simulates the drop, measures 8 features of the resulting board
-(holes, bumpiness, wells, ...) and scores the board as a weighted sum of
-those features. It picks the placement with the best score.
-
-How it learns
--------------
-It is not told which features are good or bad. The weights start random and
-are learned with the noisy Cross-Entropy Method (Szita & Lorincz, 2006):
-
-  1. Keep a Gaussian distribution (mean, std) over the weight vector.
-  2. Sample a population of weight vectors and let each one play games.
-  3. Keep the top 20% (the "elite"), refit the mean/std to the elite.
-  4. Add a little noise to the std so it keeps exploring; repeat.
-
-Over generations the distribution narrows onto weights that clear many lines.
-
-The board is simulated with one integer bitmask per row, which keeps the
-search fast in pure Python (no numpy or GPU needed).
-"""
-
 import json
 import math
 import os
@@ -48,11 +23,7 @@ FEATURE_NAMES = [
 ]
 N_FEATURES = len(FEATURE_NAMES)
 
-
-# ---------------------------------------------------------------- piece data
 def _piece_table():
-    """For each piece: one entry per *distinct* rotation, with the data
-    needed to drop it quickly in any column."""
     table = {}
     for name in PIECE_NAMES:
         seen, entries = set(), []
@@ -64,7 +35,6 @@ def _piece_table():
                 continue
             seen.add(norm)
             width = max(c for _, c in cells) - minc + 1
-            # lowest piece cell (relative row) in each piece column
             bottoms = [max(r for r, c in cells if c - minc == j) for j in range(width)]
             rowmasks = {}
             for r, c in cells:
@@ -80,12 +50,10 @@ PIECES = _piece_table()
 
 
 def board_to_rows(board):
-    """Convert the engine's 2D board into one bitmask per row."""
     return [sum(1 << c for c in range(WIDTH) if row[c]) for row in board]
 
 
 def column_tops(rows):
-    """Index of the highest filled row in each column (HEIGHT if empty)."""
     tops = [HEIGHT] * WIDTH
     seen = 0
     for r, b in enumerate(rows):
@@ -99,8 +67,6 @@ def column_tops(rows):
                 break
     return tops
 
-
-# ------------------------------------------------------------------ features
 def board_features(rows, landing_height, eroded):
     row_t = col_t = holes = rows_holes = 0
     cover = seen = 0
@@ -125,7 +91,7 @@ def board_features(rows, landing_height, eroded):
             holes += hole.bit_count()
             rows_holes += 1
         cover |= b
-    col_t += (FULL & ~prev).bit_count()  # the floor counts as filled
+    col_t += (FULL & ~prev).bit_count()
 
     wells = bump = 0
     for c in range(WIDTH):
@@ -140,16 +106,12 @@ def board_features(rows, landing_height, eroded):
     return (landing_height, eroded, row_t, col_t, holes, wells, rows_holes, bump)
 
 
-# --------------------------------------------------------------- placements
 def placements(rows, name):
-    """Yield (rot, game_x, new_rows, lines_cleared, features) for every legal
-    hard-drop placement of piece `name` on the board `rows`."""
     tops = column_tops(rows)
     for rot, minc, minr, maxr, width, bottoms, rowmasks in PIECES[name]:
         for x in range(WIDTH - width + 1):
-            # highest row offset y such that the piece sits on the stack
             y = min(tops[x + j] - 1 - bottoms[j] for j in range(width))
-            if y + minr < 0:  # would stick out of the top: game over
+            if y + minr < 0:
                 continue
             new = rows[:]
             for r, m in rowmasks:
@@ -179,7 +141,6 @@ class Agent:
         self.weights = list(weights)
 
     def choose(self, game):
-        """Return (rotation, x) for the game's current piece, or None."""
         mv = best_placement(board_to_rows(game.board), game.current.name, self.weights)
         return None if mv is None else (mv[0], mv[1])
 
@@ -190,7 +151,6 @@ class Agent:
         return cls([data["weights"][n] for n in FEATURE_NAMES])
 
 
-# ------------------------------------------------------------- fast games
 def simulate_game(weights, seed, max_pieces):
     """Play one game headlessly. Returns (lines_cleared, pieces_placed)."""
     rng = random.Random(seed)
@@ -211,8 +171,6 @@ def _evaluate(args):
     weights, seeds, max_pieces = args
     return sum(simulate_game(weights, s, max_pieces)[0] for s in seeds) / len(seeds)
 
-
-# ------------------------------------------------------------------ training
 def save_weights(path, weights, info=None):
     data = {"weights": dict(zip(FEATURE_NAMES, weights))}
     if info:
@@ -238,7 +196,6 @@ def train(generations=15, population=40, elite_frac=0.2, games=3,
     try:
         for gen in range(1, generations + 1):
             t0 = time.time()
-            # all candidates face the same piece sequences this generation
             seeds = [rng.randrange(1 << 30) for _ in range(games)]
             cands = [[rng.gauss(m, s) for m, s in zip(mean, std)]
                      for _ in range(population)]
@@ -247,7 +204,7 @@ def train(generations=15, population=40, elite_frac=0.2, games=3,
 
             ranked = sorted(zip(scores, cands), key=lambda t: -t[0])
             elite = [c for _, c in ranked[:n_elite]]
-            noise = max(4.0 - gen * 0.4, 0.1)  # decaying exploration noise
+            noise = max(4.0 - gen * 0.4, 0.1)
             for i in range(N_FEATURES):
                 vals = [e[i] for e in elite]
                 mean[i] = sum(vals) / n_elite
@@ -263,7 +220,6 @@ def train(generations=15, population=40, elite_frac=0.2, games=3,
             log(f"gen {gen:3d} | best {ranked[0][0]:7.1f} | elite avg "
                 f"{elite_avg:7.1f} | pop avg {sum(scores)/len(scores):7.1f} "
                 f"lines/game | {time.time() - t0:5.1f}s")
-            # the distribution mean is usually the most robust policy
             save_weights(out, mean, {"generation": gen,
                                      "max_pieces_per_game": max_pieces,
                                      "history": history})
